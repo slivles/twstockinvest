@@ -223,7 +223,7 @@ def add_talib_info(df):
     # print(result.to_string)
     return result
 
-
+# 下載每日盤後資訊
 def getDayTradeData():
     # download today stock data
     url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data"
@@ -232,6 +232,7 @@ def getDayTradeData():
     url2 = "http://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_download.php?l=zh-tw&se=EW"
     request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
 
+# 櫃買資料處理
 def counter_data_preprocess(filename):
     # read input file
     fin = open(filename, "rt", encoding="utf-8")
@@ -272,7 +273,7 @@ def read_listed_cvs_file(filename, date):
     df["Date"] = str(date).replace("-", "")
     return df
 
-
+# 去除多餘的行數
 def remove_excess_line(filename):
     #     delete 1~4 line and last line
     lines = []
@@ -365,7 +366,7 @@ def delete_old_table():
     SQL = "DELETE FROM `technical_data`"
     conn.execute(SQL)
 
-
+# 將historical資料增加技術指標後寫到technical
 def historical_to_technical_one_pack():
     delete_old_table()
     # fetch all
@@ -393,7 +394,7 @@ def historical_to_technical_one_pack():
         print(tmp)
     # return picked_list
 
-
+# 抓technical_data 出來，用來餵給電腦篩選
 def fetch_technical_for_pick():
     conn = connectDB()
     sql = "SELECT * FROM `technical_data`"
@@ -409,7 +410,7 @@ def fetch_technical_for_pick():
         print(tmp)
     return picked_list, picked_reason_list
 
-
+# 畫出K線圖
 def draw(df):
     # ts_code = '2330'  # 股票代码
     symbol = df.StockCode.iloc[-1] + "-" + df.name.iloc[-1]
@@ -492,7 +493,7 @@ def draw(df):
 
     #
 
-
+# 第一階段電腦篩選的規則
 def pick_stock(df, picked_list, picked_reason_list):
     picked = False
     reason = ""
