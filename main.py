@@ -15,6 +15,7 @@ import finplot as fplt
 import requests
 import sys
 import tkinter as tk
+import os
 
 np.seterr(divide='ignore', invalid='ignore')  # 忽略warning
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
@@ -28,6 +29,9 @@ lockForSql = threading.Lock()
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 failList = []
+
+#global variable
+prdct = ""
 
 
 def fetchData(stock_code):
@@ -223,6 +227,7 @@ def add_talib_info(df):
     # print(result.to_string)
     return result
 
+
 # 下載每日盤後資訊
 def getDayTradeData():
     # download today stock data
@@ -231,6 +236,7 @@ def getDayTradeData():
     request.urlretrieve(url, "STOCK_DAY_ALL_" + str(today) + ".csv")
     url2 = "http://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_download.php?l=zh-tw&se=EW"
     request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
+
 
 # 櫃買資料處理
 def counter_data_preprocess(filename):
@@ -249,6 +255,7 @@ def counter_data_preprocess(filename):
     fin.write(data)
     # close the file
     fin.close()
+
 
 def read_conter_cvs_file(filename, date):
     counter_data_preprocess(filename)
@@ -272,6 +279,7 @@ def read_listed_cvs_file(filename, date):
     df = df.fillna(0)
     df["Date"] = str(date).replace("-", "")
     return df
+
 
 # 去除多餘的行數
 def remove_excess_line(filename):
@@ -366,6 +374,7 @@ def delete_old_table():
     SQL = "DELETE FROM `technical_data`"
     conn.execute(SQL)
 
+
 # 將historical資料增加技術指標後寫到technical
 def historical_to_technical_one_pack():
     delete_old_table()
@@ -394,6 +403,7 @@ def historical_to_technical_one_pack():
         print(tmp)
     # return picked_list
 
+
 # 抓technical_data 出來，用來餵給電腦篩選
 def fetch_technical_for_pick():
     conn = connectDB()
@@ -410,10 +420,11 @@ def fetch_technical_for_pick():
         print(tmp)
     return picked_list, picked_reason_list
 
+
 # 畫出K線圖
-def draw(df):
+def draw(df,pciked_reason):
     # ts_code = '2330'  # 股票代码
-    symbol = df.StockCode.iloc[-1] + "-" + df.name.iloc[-1]
+    symbol = df.StockCode.iloc[-1] + "-" + df.name.iloc[-1] + pciked_reason
     # set df
     # conn = connectDB()
     # sql = "SELECT * FROM `technical_data` WHERE StockCode = '2330'"
@@ -493,57 +504,68 @@ def draw(df):
 
     #
 
+
 # 第一階段電腦篩選的規則
 def pick_stock(df, picked_list, picked_reason_list):
     picked = False
     reason = ""
     df = df.rename(columns={'5ma': 'ma5'}, inplace=False)
+    df = df.rename(columns={'10ma': 'ma10'}, inplace=False)
     # 過濾量太小的
     if (df.TradeValue.iloc[-1] < 20000000):
         return picked_list, picked_reason_list
-    # # 過濾月線下彎
-    elif ((df.middleband.iloc[-2] > df.middleband.iloc[-1]) and (df.middleband.iloc[-3] > df.middleband.iloc[-2])):
-        return picked_list, picked_reason_list
+
 
     # 爆大量 (100% more)  (上漲，成交量>500)
     if ((df.volume.iloc[-1] > df.volume.iloc[-2] * 2) and (df.close.iloc[-1] > df.close.iloc[-2]) and df.volume.iloc[
         -1] > 500000):
         picked = True
-        reason = reason + "V"
+        reason = "、爆大量"
+    # 過濾月線下彎
+    elif ((df.middleband.iloc[-2] > df.middleband.iloc[-1]) and (df.middleband.iloc[-3] > df.middleband.iloc[-2])):
+        return picked_list, picked_reason_list
     # 當日支撐
     # 下布林通道
-    elif ((df.close.iloc[-1] < df.lowerband.iloc[-1]) and (df.close.iloc[-1] > df.lowerband.iloc[-1])):
+    if ((df.close.iloc[-1] < df.lowerband.iloc[-1]) and (df.close.iloc[-1] > df.lowerband.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、下布林支撐"
     # 上布林通道
-    elif ((df.close.iloc[-1] < df.upperband.iloc[-1]) and (df.close.iloc[-1] > df.upperband.iloc[-1])):
+    if ((df.close.iloc[-1] < df.upperband.iloc[-1]) and (df.close.iloc[-1] > df.upperband.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、上布林支撐"
     # 5日
-    elif ((df.close.iloc[-1] < df.ma5.iloc[-1]) and (df.close.iloc[-1] > df.ma5.iloc[-1])):
+    if ((df.close.iloc[-1] < df.ma5.iloc[-1]) and (df.close.iloc[-1] > df.ma5.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、5日支撐"
+    # 10日
+    if ((df.close.iloc[-1] < df.ma10.iloc[-1]) and (df.close.iloc[-1] > df.ma10.iloc[-1])):
+        picked = True
+        reason = reason + "、10日支撐"
     # 月線
-    elif ((df.close.iloc[-1] < df.middleband.iloc[-1]) and (df.close.iloc[-1] > df.middleband.iloc[-1])):
+    if ((df.close.iloc[-1] < df.middleband.iloc[-1]) and (df.close.iloc[-1] > df.middleband.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、月線支撐"
     # 隔日支撐
     # 下布林通道
-    elif ((df.close.iloc[-2] < df.lowerband.iloc[-2]) and (df.close.iloc[-1] > df.lowerband.iloc[-1])):
+    if ((df.close.iloc[-2] < df.lowerband.iloc[-2]) and (df.close.iloc[-1] > df.lowerband.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、下布林隔日支撐"
     # 上布林通道
-    elif ((df.close.iloc[-2] < df.upperband.iloc[-2]) and (df.close.iloc[-1] > df.upperband.iloc[-1])):
+    if ((df.close.iloc[-2] < df.upperband.iloc[-2]) and (df.close.iloc[-1] > df.upperband.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、上布林隔日支撐"
     # 5日
-    elif ((df.close.iloc[-2] < df.ma5.iloc[-2]) and (df.close.iloc[-1] > df.ma5.iloc[-1])):
+    if ((df.close.iloc[-2] < df.ma5.iloc[-2]) and (df.close.iloc[-1] > df.ma5.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、5日隔日支撐"
+    # 5日
+    if ((df.close.iloc[-2] < df.ma10.iloc[-2]) and (df.close.iloc[-1] > df.ma10.iloc[-1])):
+        picked = True
+        reason = reason + "、10日隔日支撐"
     # 月線
-    elif ((df.low.iloc[-2] < df.middleband.iloc[-2]) and (df.close.iloc[-1] > df.middleband.iloc[-1])):
+    if ((df.low.iloc[-2] < df.middleband.iloc[-2]) and (df.close.iloc[-1] > df.middleband.iloc[-1])):
         picked = True
-        reason = reason + "S"
+        reason = reason + "、月線隔日支撐"
     # 離線支撐
     #  how  ?
 
@@ -553,11 +575,11 @@ def pick_stock(df, picked_list, picked_reason_list):
     print(str(df.close.iloc[-1]) + "," + str(df.upperband.iloc[-1]))
     if ((df.close.iloc[-1] > df.upperband.iloc[-1])):
         picked = True
-        reason = reason + "B"
+        reason = reason + "、突破布林"
     # macd
-    if ((df.macdhist.iloc[-1] > df.macdhist.iloc[-2]) and (df.macdhist.iloc[-1] < 0)):
-        picked = True
-        reason = reason + "M"
+    # if ((df.macdhist.iloc[-1] > df.macdhist.iloc[-2]) and (df.macdhist.iloc[-1] < 0)):
+    #     picked = True
+    #     reason = reason + "M"
     if (picked == True):
         picked_list.append(df)
         picked_reason_list.append(reason)
@@ -565,31 +587,34 @@ def pick_stock(df, picked_list, picked_reason_list):
 
     # 離開下軌道
 
+def get_last_trading_date_from_db():
+    conn = connectDB()
+    sql = "SELECT max(Date) as Date FROM `historical_data` ORDER BY `historical_data`.`Date` DESC"
+    df = read_history_db_as_dataframe(sql, conn)
+    return(str(df.Date[0]).replace("-", ""))
 
-def write_picked_list(stock_code_and_name):
-    today = datetime.date.today()
-    with open('Picked_List' + str(today) + '.txt', 'a', encoding="utf8") as f:
-        for i in stock_code_and_name:
-            f.write(str(i) + '\n')
-
+today = get_last_trading_date_from_db()
 
 def human_pick(picked_list, pciked_reason_list):
     global prdct
+    global today
     print("picked_list length : " + str(len(picked_list)))
     conn = connectDB()
     man_picked_stock_code_list = []
     man_picked_reason_list = []
     n = 0
     length = len(picked_list)
+    picked_count = 0
     for i in picked_list:
-        print("( " + str(n + 1) + " / " + str(length) + " )")
+        print("( " + str(n + 1) + " / " + str(length) + " ) "+'{:.1%}'.format(n + 1/length)+" ,Picked : "+str(picked_count))
 
-        draw(i)
+        draw(i,pciked_reason_list[n])
         make_pick_or_drop()
         stock_code = i.StockCode.iloc[-1]
         name = i.name.iloc[-1]
-        today = str(datetime.date.today()).replace("-", "")
+        # today = str(datetime.date.today()).replace("-", "")
         if (prdct == "pick"):
+            picked_count += 1
             man_picked_stock_code_list.append(i)
             man_picked_reason_list.append(pciked_reason_list[n])
             today = str(datetime.date.today()).replace("-", "")
@@ -610,29 +635,24 @@ def human_pick(picked_list, pciked_reason_list):
 
 
 def human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list):
+    global today
     print("2nd round picked_list length : " + str(len(man_picked_stock_code_list)))
     conn = connectDB()
     n = 0
     length = len(man_picked_stock_code_list)
     for i in man_picked_stock_code_list:
         print("( " + str(n + 1) + " / " + str(length) + " )")
-
-        draw(i)
+        draw(i,man_picked_reason_list[n])
         make_decision()
         stock_code = i.StockCode.iloc[-1]
         name = i.name.iloc[-1]
-        today = str(datetime.date.today()).replace("-", "")
+        # today = str(datetime.date.today()).replace("-", "")
         sql = "INSERT INTO `predict_log`(`Date`, `StockCode`, `name`, `picked_reason`, `predict`, `after_1_day`, `after_5_day`, `after_10_day`, `after_20_day`, `after_30_day`, `after_60_day`, `after_120_day`) " \
               "VALUES (" + str(
             today) + ",'" + stock_code + "','" + name + "','" + man_picked_reason_list[
                   n] + "','" + prdct + "',0,0,0,0,0,0,0)"
         conn.execute(sql)
         n += 1
-
-
-def getchar_test():
-    a = sys.stdin.read(1)
-    return a
 
 
 def winrate_test():  # not finished , wish it become a mini game
@@ -650,45 +670,48 @@ def winrate_test():  # not finished , wish it become a mini game
     return 0
 
 
-prdct = ""
-
-
 def make_decision():
     global prdct
     root = tk.Tk()
     root.title('make_decision')
-    root.geometry('300x400+1500+0')
+    root.geometry('300x500+1500+200')
 
-    def button_buy():
+    def button_1():
         global prdct
-        prdct = "buy"
+        prdct = "low risk must buy"
         root.destroy()
 
-    def button_pay_attention():
+    def button_2():
         global prdct
-        prdct = "pay attention"
+        prdct = "predict up A"
         root.destroy()
 
-    def button_keep_tracking():
+    def button_3():
         global prdct
-        prdct = "keep tracking"
+        prdct = "predict up B"
         root.destroy()
 
-    def button_no_idea():
+    def button_4():
         global prdct
-        prdct = "no idea"
+        prdct = "curious"
         root.destroy()
 
-    def button_drop():
+    def button_5():
+        global prdct
+        prdct = "conflict"
+        root.destroy()
+
+    def button_6():
         global prdct
         prdct = "drop"
         root.destroy()
 
-    tk.Button(root, text='Buy', command=button_buy, bg='red', width='20', height='3').pack()
-    tk.Button(root, text='Pay Attention', command=button_pay_attention, bg='orange', width='20', height='3').pack()
-    tk.Button(root, text='Keep Tracking', command=button_keep_tracking, bg='green', width='20', height='3').pack()
-    tk.Button(root, text='No Idea', command=button_no_idea, bg='grey', width='20', height='3').pack()
-    tk.Button(root, text='Drop', command=button_drop, bg='dark grey', width='20', height='3').pack()
+    tk.Button(root, text='low risk must buy', command=button_1, bg='red', width='20', height='3').pack()
+    tk.Button(root, text='predict up A', command=button_2, bg='orange', width='20', height='3').pack()
+    tk.Button(root, text='predict up B', command=button_3, bg='green', width='20', height='3').pack()
+    tk.Button(root, text='curious', command=button_4, bg='blue', width='20', height='3').pack()
+    tk.Button(root, text='conflict', command=button_5, bg='grey', width='20', height='3').pack()
+    tk.Button(root, text='drop', command=button_6, bg='dark grey', width='20', height='3').pack()
 
     root.mainloop()
 
@@ -717,36 +740,6 @@ def make_pick_or_drop():
     root.mainloop()
 
 
-def make_predict():
-    global prdct
-    root = tk.Tk()
-    root.title('make_predict')
-    root.geometry('300x600+1000+0')
-
-    predict = ""
-
-    def predict_up():
-        global prdct
-        prdct = "up"
-        root.destroy()
-
-    def predict_dowm():
-        global prdct
-        prdct = "down"
-        root.destroy()
-
-    def preditc_no_idea():
-        global prdct
-        prdct = "noidea"
-        root.destroy()
-
-    tk.Button(root, text='UP', command=predict_up, bg='red', width='20', height='3').pack()
-    tk.Button(root, text='no_idea', command=preditc_no_idea, bg='grey', width='20', height='3').pack()
-    tk.Button(root, text='down', command=predict_dowm, bg='green', width='20', height='3').pack()
-
-    root.mainloop()
-
-
 def test_tmp():
     conn = connectDB()
     sql = "SELECT * FROM `technical_data` WHERE StockCode ='1616'"
@@ -769,20 +762,20 @@ def test_tmp():
 def predict_update():
     # get date order and data from technical_data
     conn = connectDB()
-    sql = "SELECT Date FROM technical_data WHERE technical_data.StockCode ='2330' ORDER BY `technical_data`.`Date`"
+    sql = "SELECT DISTINCT Date FROM `historical_data` ORDER BY `historical_data`.`date` DESC"
     date_df = read_history_db_as_dataframe(sql, conn)
-    today = str(date_df.Date.iloc[-1]).replace("-", "")
-    yesterday = str(date_df.Date.iloc[-2]).replace("-", "")
-    bf_5_day = str(date_df.Date.iloc[-6]).replace("-", "")
-    bf_10_day = str(date_df.Date.iloc[-11]).replace("-", "")
-    bf_20_day = str(date_df.Date.iloc[-21]).replace("-", "")
-    bf_60_day = str(date_df.Date.iloc[-61]).replace("-", "")
-    bf_120_day = str(date_df.Date.iloc[-121]).replace("-", "")
+    today = str(date_df.Date.iloc[0]).replace("-", "")
+    yesterday = str(date_df.Date.iloc[1]).replace("-", "")
+    bf_5_day = str(date_df.Date.iloc[4]).replace("-", "")
+    bf_10_day = str(date_df.Date.iloc[9]).replace("-", "")
+    bf_20_day = str(date_df.Date.iloc[19]).replace("-", "")
+    bf_60_day = str(date_df.Date.iloc[59]).replace("-", "")
+    bf_120_day = str(date_df.Date.iloc[119]).replace("-", "")
     date_list = [bf_5_day, bf_10_day, bf_20_day, bf_60_day, bf_120_day]
 
     # update yesterday predict
     print("update yesterday predict")
-    sql = "SELECT * FROM predict_log WHERE Date = " + yesterday + " AND after_1_day = 0"
+    sql = "SELECT * FROM predict_log WHERE Date =" + yesterday + " AND after_1_day = 0"
     df = read_history_db_as_dataframe(sql, conn)
     n = 0
     length = len(df)
@@ -839,7 +832,7 @@ def all_stock_petcentage_check():
 
 def date_test():
     conn = connectDB()
-    sql = "SELECT Date FROM technical_data WHERE technical_data.StockCode ='2330' ORDER BY `technical_data`.`Date`"
+    sql = " SELECT Date FROM technical_data WHERE technical_data.StockCode ='2330' ORDER BY `technical_data`.`Date`"
     date_df = read_history_db_as_dataframe(sql, conn)
     yesterday = str(date_df.Date.iloc[-2]).replace("-", "")
     print(yesterday)
@@ -885,7 +878,7 @@ def user_interface():
         pick_stock_one_pack()
         print("end : pick_stock_one_pack")
         return 0
-    elif(c == "3"):
+    elif (c == "3"):
         print("program end.")
         quit()
     return 0
@@ -906,9 +899,6 @@ def main():
     # insert_cvs_file_by_date("2021-10-29")
     # read_db_as_dataframe('SELECT * FROM historical_data WHERE historical_data.StockCode="2330"')
 
-    # conn = connectDB()
-    # fetch_history_insert_tech("4163",conn)
-
     # update data
     # everyday_stock_data_update()
     # historical_to_technical_one_pack()
@@ -918,11 +908,7 @@ def main():
     # picked_list, pciked_reason_list = fetch_technical_for_pick()
     # man_picked_stock_code_list, man_picked_reason_list = human_pick(picked_list, pciked_reason_list)
     # human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list)
-    # write_picked_list(picked_stock_code_list,pciked_reason_list)
 
-    # test_tmp()
-    # predict testing
-    # make_decision()
 
     while True:
         user_interface()
