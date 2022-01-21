@@ -617,7 +617,7 @@ def human_pick(picked_list, pciked_reason_list):
             picked_count += 1
             man_picked_stock_code_list.append(i)
             man_picked_reason_list.append(pciked_reason_list[n])
-            today = str(datetime.date.today()).replace("-", "")
+            # today = str(datetime.date.today()).replace("-", "")
             sql = "INSERT INTO `predict_log`(`Date`, `StockCode`, `name`, `picked_reason`, `predict`, `after_1_day`, `after_5_day`, `after_10_day`, `after_20_day`, `after_30_day`, `after_60_day`, `after_120_day`) " \
                   "VALUES (" + str(
                 today) + ",'" + stock_code + "','" + name + "','" + pciked_reason_list[
@@ -799,10 +799,11 @@ def predict_update():
     print("update more days predict")
     db_column_list = ["after_5_day", "after_10_day", "after_20_day", "after_30_day", "after_60_day", "after_120_day"]
     n = 0
+    j = 0
     for day in date_list:
-        print("update " + db_column_list[n] + " predict")
+        print("update " + db_column_list[j] + " predict")
         # 找要更新的股票代碼
-        sql = "SELECT * FROM predict_log WHERE Date = " + day + " AND " + db_column_list[n] + " = 0"
+        sql = "SELECT * FROM predict_log WHERE Date = " + day + " AND " + db_column_list[j] + " = 0"
         df = read_history_db_as_dataframe(sql, conn)
         length = len(df)
         print(df.tail())
@@ -813,15 +814,19 @@ def predict_update():
                 print(sql)
                 percentage_df = read_history_db_as_dataframe(sql, conn)
                 percentage = percentage_df.percentage.iloc[0]
+                print(str(percentage))
                 #
-                sql = "UPDATE `predict_log` SET " + db_column_list[n] + " = " + str(
+                sql = "UPDATE `predict_log` SET " + db_column_list[j] + " = " + str(
                     percentage) + " WHERE Date = " + day + " AND StockCode = '" + i + "'"
                 print(sql)
                 conn.execute(sql)
-            except:
+            except Exception as e:
+                print(e)
                 print("今日可能沒有交易")
             print("( " + str(n + 1) + " / " + str(length) + " )")
             n = n + 1
+        j += 1
+
     # update
     return 0
 
