@@ -16,6 +16,9 @@ import requests
 import sys
 import tkinter as tk
 import os
+import hashlib
+import os.path
+from os import path
 
 np.seterr(divide='ignore', invalid='ignore')  # 忽略warning
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
@@ -320,11 +323,43 @@ def process_listed_data(filename, date):
 def everyday_stock_data_update():
     getDayTradeData()
     date = datetime.date.today()
-    conn = connectDB()
+    yesterday = date - datetime.timedelta(days=1)
+    # check if I've already update
+    if(path.exists("SQUOTE_EW_" + str(date) + ".csv")):
+        print("[Error] today's file already exist")
+        return
     df = process_counter_data("SQUOTE_EW_" + str(date) + ".csv", date)
-    insertToDB(df, conn)
     df2 = process_listed_data("STOCK_DAY_ALL_" + str(date) + ".csv", date)
-    insertToDB(df2, conn)
+    today_counter_file = "SQUOTE_EW_" + str(date) + ".csv"
+    today_listed_file = "STOCK_DAY_ALL_" + str(date) + ".csv"
+    today_reencode_conter_file = "reEncode_SQUOTE_EW_" + str(date) + ".csv"
+    #
+    yesterday_counter_file = "SQUOTE_EW_" + str(yesterday) + ".csv"
+    n = 1
+    while (not(path.exists(yesterday_counter_file))):
+        yesterday = date - datetime.timedelta(days=n)
+        yesterday_counter_file = "SQUOTE_EW_" + str(yesterday) + ".csv"
+        n += 1
+    yesterday_counter_file = "SQUOTE_EW_" + str(yesterday) + ".csv"
+    yesterday_listed_file = "STOCK_DAY_ALL_" + str(yesterday) + ".csv"
+    yesterday_reencode_conter_file = "reEncode_SQUOTE_EW_" + str(yesterday) + ".csv"
+    # check today's data is different from yesterday's ( start )
+    updateflag = True
+    if(file_checksum(today_counter_file) == file_checksum(yesterday_counter_file)):
+        os.remove(today_counter_file)
+        os.remove(today_reencode_conter_file)
+        print("[Error] today_counter_file is the same file sa yesterday, deleted")
+        updateflag = False
+    if(file_checksum(today_listed_file) == file_checksum(yesterday_listed_file)):
+        os.remove(today_listed_file)
+        print("[Error] today_listed_file is the same file sa yesterday, deleted")
+        updateflag = False
+    # check today's data is different from yesterday's ( end )
+    if(updateflag == True):
+        conn = connectDB()
+        insertToDB(df, conn)
+        insertToDB(df2, conn)
+
 
 
 def insert_cvs_file_by_date(date):
@@ -896,8 +931,18 @@ def pick_stock_one_pack():
     human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list)
 
 
+def file_checksum(filename):
+    return hashlib.md5(open(filename, 'rb').read()).hexdigest()
+
+def checksum_test():
+    # print(str(file_checksum("STOCK_DAY_ALL_2022-01-25.csv")))
+    date = datetime.date.today()
+    yesterday = date - datetime.timedelta(days=1)
+    print(yesterday)
+
 def main():
     global prdct
+
     # pd.set_option('mode.chained_assignment', None)
 
     # insert_cvs_file_by_date("2021-11-09")
