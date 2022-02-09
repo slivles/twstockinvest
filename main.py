@@ -4,6 +4,7 @@ import investpy
 import time
 from sqlalchemy import create_engine
 import threading
+from threading import Timer
 import pandas as pd
 from talib import abstract
 from urllib import request
@@ -19,6 +20,7 @@ import os
 import hashlib
 import os.path
 from os import path
+import schedule
 
 np.seterr(divide='ignore', invalid='ignore')  # 忽略warning
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
@@ -321,13 +323,13 @@ def process_listed_data(filename, date):
 
 
 def everyday_stock_data_update():
-    getDayTradeData()
     date = datetime.date.today()
     yesterday = date - datetime.timedelta(days=1)
     # check if I've already update
     if(path.exists("SQUOTE_EW_" + str(date) + ".csv")):
         print("[Error] today's file already exist")
         return
+    getDayTradeData()
     df = process_counter_data("SQUOTE_EW_" + str(date) + ".csv", date)
     df2 = process_listed_data("STOCK_DAY_ALL_" + str(date) + ".csv", date)
     today_counter_file = "SQUOTE_EW_" + str(date) + ".csv"
@@ -641,7 +643,7 @@ def human_pick(picked_list, pciked_reason_list):
     length = len(picked_list)
     picked_count = 0
     for i in picked_list:
-        print("( " + str(n + 1) + " / " + str(length) + " ) "+'{:.1%}'.format(n + 1/length)+" ,Picked : "+str(picked_count))
+        print("( " + str(n + 1) + " / " + str(length) + " ) "+'{:.1%}'.format((n + 1)/length)+" ,Picked : "+str(picked_count))
 
         draw(i,pciked_reason_list[n])
         make_pick_or_drop()
@@ -889,6 +891,7 @@ def user_interface():
         print("2. update technical data")
         print("3. update predict data")
         print("4. update all")
+        print("5. Start a thread to auto update daily data")
         d = input("choose : ")
         if (d == "1"):
             print("start : everyday_stock_data_update")
@@ -912,6 +915,10 @@ def user_interface():
             print("start : predict_update")
             predict_update()
             print("end : predict_update")
+        elif (d == "5"):
+            print("start thread : schedule_auto_update_everyday_data")
+            t = threading.Thread(target=schedule_auto_update_everyday_data)  #
+            t.start()  # 開始
 
     elif (c == "2"):
         print("start : pick_stock_one_pack")
@@ -934,15 +941,27 @@ def pick_stock_one_pack():
 def file_checksum(filename):
     return hashlib.md5(open(filename, 'rb').read()).hexdigest()
 
-def checksum_test():
-    # print(str(file_checksum("STOCK_DAY_ALL_2022-01-25.csv")))
-    date = datetime.date.today()
-    yesterday = date - datetime.timedelta(days=1)
-    print(yesterday)
+
+def schedule_auto_update_everyday_data():
+    now = datetime.datetime.now().time()
+    then = datetime.datetime.now().time().replace(hour=17, minute=00, second=00)
+    delta = datetime.datetime.combine(datetime.datetime.min,then) - datetime.datetime.combine(datetime.datetime.min,now)
+    print("sleep " + str(delta.seconds) + " seconds")
+    time.sleep(int(delta.seconds))
+    while(True):
+        everyday_stock_data_update()
+        # get sleep time
+        now = datetime.datetime.now().time()
+        then = datetime.datetime.now().time().replace(hour=17, minute=00, second=00)
+        delta = datetime.datetime.combine(datetime.datetime.min, then) - datetime.datetime.combine(datetime.datetime.min, now)
+        #
+        time.sleep(int(delta.seconds))
+
 
 def main():
     global prdct
-
+    # schedule_auto_update_everyday_data()
+    # quit()
     # pd.set_option('mode.chained_assignment', None)
 
     # insert_cvs_file_by_date("2021-11-09")
