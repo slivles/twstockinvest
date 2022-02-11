@@ -944,15 +944,18 @@ def file_checksum(filename):
 
 def schedule_auto_update_everyday_data():
     now = datetime.datetime.now().time()
-    then = datetime.datetime.now().time().replace(hour=17, minute=00, second=00)
+    then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
     delta = datetime.datetime.combine(datetime.datetime.min,then) - datetime.datetime.combine(datetime.datetime.min,now)
     print("sleep " + str(delta.seconds) + " seconds")
     time.sleep(int(delta.seconds))
     while(True):
+        # update task
         everyday_stock_data_update()
+        historical_to_technical_one_pack()
+        predict_update()
         # get sleep time
         now = datetime.datetime.now().time()
-        then = datetime.datetime.now().time().replace(hour=17, minute=00, second=00)
+        then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
         delta = datetime.datetime.combine(datetime.datetime.min, then) - datetime.datetime.combine(datetime.datetime.min, now)
         #
         time.sleep(int(delta.seconds))
