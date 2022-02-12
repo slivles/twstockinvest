@@ -871,6 +871,28 @@ def predict_update():
 def all_stock_petcentage_check():
     return 0
 
+# 從選定的日期開始讀取並insert資料到資料庫當中，直到今天為止
+def insert_csv_data_from_date():
+    start_date = input("Please input start date ,(formate : 2022-01-01): ")
+    date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+    today = datetime.datetime.today()
+    conn = connectDB()
+    print("date : "+str(date) )
+    print("todat : "+str(today))
+    print(str(date < today))
+    while (date < today):
+        if(path.exists("SQUOTE_EW_" + str(date.date()) + ".csv")):
+            print("insert("+str(date.date())+")")
+            #insert begin
+            df = process_counter_data("SQUOTE_EW_" + str(date.date()) + ".csv", date.date())
+            insertToDB(df, conn)
+            df2 = process_listed_data("STOCK_DAY_ALL_" + str(date.date()) + ".csv", date.date())
+            insertToDB(df2, conn)
+            #insert end
+            date = date + datetime.timedelta(days=1)
+        else:
+            date = date +  datetime.timedelta(days=1)
+
 
 def date_test():
     conn = connectDB()
@@ -893,6 +915,7 @@ def user_interface():
         print("3. update predict data")
         print("4. update all")
         print("5. Start a thread to auto update daily data")
+        print("6. insert csv data start from certain day")
         d = input("choose : ")
         if (d == "1"):
             print("start : everyday_stock_data_update")
@@ -920,6 +943,10 @@ def user_interface():
             print("start thread : schedule_auto_update_everyday_data")
             t = threading.Thread(target=schedule_auto_update_everyday_data)  #
             t.start()  # 開始
+        elif (d == "6"):
+            print("start : insert_csv_data_from_date()")
+            insert_csv_data_from_date()
+            print("end : insert_csv_data_from_date()")
 
     elif (c == "2"):
         print("start : pick_stock_one_pack")
