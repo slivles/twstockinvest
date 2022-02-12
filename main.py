@@ -43,7 +43,7 @@ def fetchData(stock_code):
     df = investpy.get_stock_historical_data(stock=stock_code,
                                             country='Taiwan',
                                             from_date='01/01/2010',
-                                            to_date='01/10/2021')
+                                            to_date='24/10/2021')
     df['StockCode'] = stock_code
     df['Date'] = df.index
     print(df.head())
@@ -884,7 +884,8 @@ def user_interface():
     print("start : user interface")
     print("1. update data")
     print("2. pick stock")
-    print("3. end")
+    print("3. fetch data from investing.com")
+    print("4. end")
     c = input("choose : ")
     if (c == "1"):
         print("1. update every day stock data")
@@ -926,6 +927,10 @@ def user_interface():
         print("end : pick_stock_one_pack")
         return 0
     elif (c == "3"):
+        print("start : multiThreadGetAll")
+        multiThreadGetAll()
+        print("end : multiThreadGetAll")
+    elif (c == "4"):
         print("program end.")
         quit()
     return 0
