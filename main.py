@@ -329,9 +329,12 @@ def everyday_stock_data_update():
     if(path.exists("SQUOTE_EW_" + str(date) + ".csv")):
         print("[Error] today's file already exist")
         return
+    # download
     getDayTradeData()
+    # process
     df = process_counter_data("SQUOTE_EW_" + str(date) + ".csv", date)
     df2 = process_listed_data("STOCK_DAY_ALL_" + str(date) + ".csv", date)
+    #
     today_counter_file = "SQUOTE_EW_" + str(date) + ".csv"
     today_listed_file = "STOCK_DAY_ALL_" + str(date) + ".csv"
     today_reencode_conter_file = "reEncode_SQUOTE_EW_" + str(date) + ".csv"
@@ -362,6 +365,42 @@ def everyday_stock_data_update():
         insertToDB(df, conn)
         insertToDB(df2, conn)
 
+#下載每日三大法人資料
+def download_daily_three_major_leagal_person_data():
+    # 上市資料(證交所)
+    today = datetime.datetime.strptime("2022-02-25","%Y-%m-%d").date()
+    # today = datetime.date.today()
+    print(str(today))
+    today_just_number = str(today).replace("-","")
+    url = "https://www.twse.com.tw/fund/T86?response=csv&date="+today_just_number+"&selectType=ALL"
+    print("start download daily legal person data")
+    print(url)
+    request.urlretrieve(url, "上市三大法人_" + str(today) + ".csv")
+    # 上櫃資料(櫃買中心)
+    url2 = "https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d="
+    print(url2)
+    request.urlretrieve(url2, "上櫃三大法人_" + str(today) + ".csv")
+    print("download daily legal person data success")
+    return 0
+
+# 處理三大法人資料
+def process_three_major_leagal_person_data(filename):
+    # read input file
+    fin = open(filename, "rt", encoding="cp950")
+    # read file contents to string
+    data = fin.read()
+    # replace all occurrences of the required string
+    data = data.replace('","', '" "')
+    data = data.replace(',', '')
+    # close the input file
+    fin.close()
+    # open the input file in write mode
+    fin = open(filename, "wt", encoding="cp950")
+    # overrite the input file with the resulting data
+    fin.write(data)
+    # close the file
+    fin.close()
+    return 0
 
 
 def insert_cvs_file_by_date(date):
@@ -995,8 +1034,10 @@ def schedule_auto_update_everyday_data():
 
 def main():
     global prdct
-    # schedule_auto_update_everyday_data()
-    # quit()
+    download_daily_three_major_leagal_person_data()
+    process_three_major_leagal_person_data("上市三大法人_2022-02-25.csv")
+    process_three_major_leagal_person_data("上櫃三大法人_2022-02-25.csv")
+    quit()
     # pd.set_option('mode.chained_assignment', None)
 
     # insert_cvs_file_by_date("2021-11-09")
