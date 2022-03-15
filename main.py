@@ -365,6 +365,14 @@ def everyday_stock_data_update():
         insertToDB(df, conn)
         insertToDB(df2, conn)
 
+# 三大法人功能整合
+def three_major_leagal_person_intergrate():
+    download_daily_three_major_leagal_person_data()
+    today = str(datetime.date.today())
+    process_three_major_leagal_person_data("上市三大法人_" + today)
+    process_three_major_leagal_person_data("上櫃三大法人_" + today)
+    remove_warrant_from_csv("上市三大法人_" + today)
+
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
     # 上市資料(證交所)
@@ -402,6 +410,46 @@ def process_three_major_leagal_person_data(filename):
     fin.close()
     return 0
 
+# 刪除上市權證
+def remove_warrant_from_csv(filename):
+    with open(filename, "r") as f:
+        lines = f.readlines()
+    with open(filename, "w") as f:
+        for line in lines:
+            if (len(line.strip("\n"))>1 and  line.strip("\n")[0] != "="):
+                f.write(line)
+    return 0
+
+# 刪除多餘行數
+def delete_excess_line_from_three_major_leagal_person_data(mode):
+    # 上市
+    if(mode == 1):
+        #刪除前一行，跟最後9行
+        lines = []
+        with open(filename, 'r', encoding="utf8") as fp:
+            # read an store all lines into list
+            lines = fp.readlines()
+        lines = lines[1:len(lines) - 9]
+        with open(filename, 'w', encoding="utf8") as fp:
+            for line in lines:
+                fp.write(line)
+    # 上櫃
+    elif(mode == 2):
+        # 刪除前一行
+        lines = []
+        with open(filename, 'r', encoding="utf8") as fp:
+            # read an store all lines into list
+            lines = fp.readlines()
+        lines = lines[1:len(lines)]
+        with open(filename, 'w', encoding="utf8") as fp:
+            for line in lines:
+                fp.write(line)
+    return 0
+
+# 三大法人資料轉dataframe
+def three_major_leagal_person_data_to_dataframe():
+
+    return 0
 
 def insert_cvs_file_by_date(date):
     conn = connectDB()
@@ -1034,10 +1082,11 @@ def schedule_auto_update_everyday_data():
 
 def main():
     global prdct
-    download_daily_three_major_leagal_person_data()
-    process_three_major_leagal_person_data("上市三大法人_2022-02-25.csv")
-    process_three_major_leagal_person_data("上櫃三大法人_2022-02-25.csv")
-    quit()
+    # download_daily_three_major_leagal_person_data()
+    # process_three_major_leagal_person_data("上市三大法人_2022-02-25.csv")
+    # process_three_major_leagal_person_data("上櫃三大法人_2022-02-25.csv")
+    # remove_warrant_from_csv("上市三大法人_2022-02-25.csv")
+    # quit()
     # pd.set_option('mode.chained_assignment', None)
 
     # insert_cvs_file_by_date("2021-11-09")
