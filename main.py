@@ -254,7 +254,7 @@ def counter_data_preprocess(filename):
     data = data.replace(',', '')
     # close the input file
     fin.close()
-    # open the input file in write mode
+    # open the input file in write mo   de
     fin = open(filename, "wt", encoding="utf-8")
     # overrite the input file with the resulting data
     fin.write(data)
@@ -369,15 +369,15 @@ def everyday_stock_data_update():
 def three_major_leagal_person_intergrate():
     download_daily_three_major_leagal_person_data()
     today = str(datetime.date.today())
-    process_three_major_leagal_person_data("上市三大法人_" + today)
-    process_three_major_leagal_person_data("上櫃三大法人_" + today)
-    remove_warrant_from_csv("上市三大法人_" + today)
+    process_three_major_leagal_person_data("上市三大法人_" + today + ".csv")
+    process_three_major_leagal_person_data("上櫃三大法人_" + today + ".csv")
+    remove_warrant_from_csv("上市三大法人_" + today + ".csv")
 
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
     # 上市資料(證交所)
-    today = datetime.datetime.strptime("2022-02-25","%Y-%m-%d").date()
-    # today = datetime.date.today()
+    # today = datetime.datetime.strptime("2022-02-25","%Y-%m-%d").date()
+    today = datetime.date.today()
     print(str(today))
     today_just_number = str(today).replace("-","")
     url = "https://www.twse.com.tw/fund/T86?response=csv&date="+today_just_number+"&selectType=ALL"
@@ -997,12 +997,13 @@ def user_interface():
     print("4. end")
     c = input("choose : ")
     if (c == "1"):
-        print("1. update every day stock data")
+        print("1. update everyday stock data")
         print("2. update technical data")
         print("3. update predict data")
         print("4. update all")
         print("5. Start a thread to auto update daily data")
         print("6. insert csv data start from certain day")
+        print("7. update everyday legal person data")
         d = input("choose : ")
         if (d == "1"):
             print("start : everyday_stock_data_update")
@@ -1034,7 +1035,10 @@ def user_interface():
             print("start : insert_csv_data_from_date()")
             insert_csv_data_from_date()
             print("end : insert_csv_data_from_date()")
-
+        elif (d == "7"):
+            print("start : three_major_leagal_person_intergrate()")
+            three_major_leagal_person_intergrate()
+            print("end : three_major_leagal_person_intergrate()")
     elif (c == "2"):
         print("start : pick_stock_one_pack")
         pick_stock_one_pack()
@@ -1072,6 +1076,7 @@ def schedule_auto_update_everyday_data():
         everyday_stock_data_update()
         historical_to_technical_one_pack()
         predict_update()
+        three_major_leagal_person_intergrate()
         # get sleep time
         now = datetime.datetime.now().time()
         then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
