@@ -377,14 +377,15 @@ def three_major_leagal_person_intergrate():
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
     # 上市資料(證交所)
-    # today = datetime.datetime.strptime("2022-02-25","%Y-%m-%d").date()
-    today = datetime.date.today()
+    today = datetime.datetime.strptime("2022-04-08","%Y-%m-%d").date()
+    # today = datetime.date.today()
     print(str(today))
     today_just_number = str(today).replace("-","")
     url = "https://www.twse.com.tw/fund/T86?response=csv&date="+today_just_number+"&selectType=ALL"
     print("start download daily legal person data")
     print(url)
     request.urlretrieve(url, "上市三大法人_" + str(today) + ".csv")
+    time.sleep(40)
     # 上櫃資料(櫃買中心)
     url2 = "https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d="
     print(url2)
@@ -1088,6 +1089,7 @@ def schedule_auto_update_everyday_data():
 
 def main():
     global prdct
+
     # download_daily_three_major_leagal_person_data()
     # process_three_major_leagal_person_data("上市三大法人_2022-02-25.csv")
     # process_three_major_leagal_person_data("上櫃三大法人_2022-02-25.csv")
