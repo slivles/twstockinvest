@@ -239,7 +239,7 @@ def getDayTradeData():
     url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data"
     today = datetime.date.today()
     request.urlretrieve(url, "STOCK_DAY_ALL_" + str(today) + ".csv")
-    time.sleep(10)
+    time.sleep(20)
     url2 = "http://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_download.php?l=zh-tw&se=EW"
     request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
 
