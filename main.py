@@ -377,8 +377,8 @@ def three_major_leagal_person_intergrate():
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
     # 上市資料(證交所)
-    today = datetime.datetime.strptime("2022-04-08","%Y-%m-%d").date()
-    # today = datetime.date.today()
+    # today = datetime.datetime.strptime("2022-04-08","%Y-%m-%d").date()
+    today = datetime.date.today()
     print(str(today))
     today_just_number = str(today).replace("-","")
     url = "https://www.twse.com.tw/fund/T86?response=csv&date="+today_just_number+"&selectType=ALL"
