@@ -370,6 +370,7 @@ def everyday_stock_data_update():
 def three_major_leagal_person_intergrate():
     download_daily_three_major_leagal_person_data()
     today = str(datetime.date.today())
+    # today = str(datetime.datetime.strptime("2022-04-15","%Y-%m-%d").date())
     process_three_major_leagal_person_data("上市三大法人_" + today + ".csv")
     process_three_major_leagal_person_data("上櫃三大法人_" + today + ".csv")
     remove_warrant_from_csv("上市三大法人_" + today + ".csv")
@@ -377,7 +378,7 @@ def three_major_leagal_person_intergrate():
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
     # 上市資料(證交所)
-    # today = datetime.datetime.strptime("2022-04-08","%Y-%m-%d").date()
+    # today = datetime.datetime.strptime("2022-04-15","%Y-%m-%d").date()
     today = datetime.date.today()
     print(str(today))
     today_just_number = str(today).replace("-","")
@@ -1062,6 +1063,7 @@ def pick_stock_one_pack():
     picked_list, pciked_reason_list = fetch_technical_for_pick()
     man_picked_stock_code_list, man_picked_reason_list = human_pick(picked_list, pciked_reason_list)
     human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list)
+    three_major_leagal_person_intergrate()
 
 
 def file_checksum(filename):
