@@ -1031,6 +1031,9 @@ def user_interface():
             print("start : predict_update")
             predict_update()
             print("end : predict_update")
+            print("start : three_major_leagal_person_intergrate")
+            three_major_leagal_person_intergrate()
+            print("end : three_major_leagal_person_intergrate")
         elif (d == "5"):
             print("start thread : schedule_auto_update_everyday_data")
             t = threading.Thread(target=schedule_auto_update_everyday_data)  #
@@ -1069,7 +1072,15 @@ def pick_stock_one_pack():
 def file_checksum(filename):
     return hashlib.md5(open(filename, 'rb').read()).hexdigest()
 
-
+def is_weekend():
+    i = datetime.datetime.today().weekday()
+    print("Today is "+ str(i))
+    if((i == 5) or (i==6)):
+        print("is_weekend return True")
+        return True
+    else:
+        print("is_weekend return False")
+        return False
 def schedule_auto_update_everyday_data():
     now = datetime.datetime.now().time()
     then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
@@ -1078,10 +1089,11 @@ def schedule_auto_update_everyday_data():
     time.sleep(int(delta.seconds))
     while(True):
         # update task
-        everyday_stock_data_update()
-        historical_to_technical_one_pack()
-        predict_update()
-        three_major_leagal_person_intergrate()
+        if(not(is_weekend())):
+            everyday_stock_data_update()
+            historical_to_technical_one_pack()
+            predict_update()
+            three_major_leagal_person_intergrate()
         # get sleep time
         now = datetime.datetime.now().time()
         then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
@@ -1092,7 +1104,7 @@ def schedule_auto_update_everyday_data():
 
 def main():
     global prdct
-
+    is_weekend()
     # download_daily_three_major_leagal_person_data()
     # process_three_major_leagal_person_data("上市三大法人_2022-02-25.csv")
     # process_three_major_leagal_person_data("上櫃三大法人_2022-02-25.csv")
