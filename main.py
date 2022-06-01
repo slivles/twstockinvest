@@ -1081,6 +1081,7 @@ def is_weekend():
     else:
         print("is_weekend return False")
         return False
+
 def schedule_auto_update_everyday_data():
     now = datetime.datetime.now().time()
     then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
@@ -1089,11 +1090,19 @@ def schedule_auto_update_everyday_data():
     time.sleep(int(delta.seconds))
     while(True):
         # update task
-        if(not(is_weekend())):
+        if(is_weekend() == False):
+            print("start : everyday_stock_data_update")
             everyday_stock_data_update()
+            print("end : everyday_stock_data_update")
+            print("start : historical_to_technical_one_pack")
             historical_to_technical_one_pack()
+            print("end : historical_to_technical_one_pack")
+            print("start : predict_update")
             predict_update()
+            print("end : predict_update")
+            print("start : three_major_leagal_person_intergrate")
             three_major_leagal_person_intergrate()
+            print("end : three_major_leagal_person_intergrate")
         # get sleep time
         now = datetime.datetime.now().time()
         then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
