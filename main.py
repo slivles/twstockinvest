@@ -1113,7 +1113,6 @@ def schedule_auto_update_everyday_data():
 
 def main():
     global prdct
-    is_weekend()
     # download_daily_three_major_leagal_person_data()
     # process_three_major_leagal_person_data("上市三大法人_2022-02-25.csv")
     # process_three_major_leagal_person_data("上櫃三大法人_2022-02-25.csv")
