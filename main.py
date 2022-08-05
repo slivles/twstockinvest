@@ -386,12 +386,17 @@ def download_daily_three_major_leagal_person_data():
     print("start download daily legal person data")
     print(url)
     request.urlretrieve(url, "上市三大法人_" + str(today) + ".csv")
-    time.sleep(40)
+    time.sleep(30)
     # 上櫃資料(櫃買中心)
     # https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d=111/04/15&s=0,asc
     url2 = "https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d="
     print(url2)
-    request.urlretrieve(url2, "上櫃三大法人_" + str(today) + ".csv")
+    try:
+        request.urlretrieve(url2, "上櫃三大法人_" + str(today) + ".csv")
+    except:
+        time.sleep(10)
+        request.urlretrieve(url2, "上櫃三大法人_" + str(today) + ".csv")
+    time.sleep(30)
     print("download daily legal person data success")
     return 0
 
