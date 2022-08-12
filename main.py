@@ -241,7 +241,11 @@ def getDayTradeData():
     request.urlretrieve(url, "STOCK_DAY_ALL_" + str(today) + ".csv")
     time.sleep(20)
     url2 = "http://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_download.php?l=zh-tw&se=EW"
-    request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
+    try:
+        request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
+    except:
+        time.sleep(10)
+        request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
 
 
 # 櫃買資料處理
@@ -370,7 +374,7 @@ def everyday_stock_data_update():
 def three_major_leagal_person_intergrate():
     download_daily_three_major_leagal_person_data()
     today = str(datetime.date.today())
-    # today = str(datetime.datetime.strptime("2022-04-15","%Y-%m-%d").date())
+    # today = str(datetime.datetime.strptime("2022-08-11","%Y-%m-%d").date())
     process_three_major_leagal_person_data("上市三大法人_" + today + ".csv")
     process_three_major_leagal_person_data("上櫃三大法人_" + today + ".csv")
     remove_warrant_from_csv("上市三大法人_" + today + ".csv")
@@ -378,7 +382,7 @@ def three_major_leagal_person_intergrate():
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
     # 上市資料(證交所)
-    # today = datetime.datetime.strptime("2022-04-15","%Y-%m-%d").date()
+    # today = datetime.datetime.strptime("2022-08-11","%Y-%m-%d").date()
     today = datetime.date.today()
     print(str(today))
     today_just_number = str(today).replace("-","")
