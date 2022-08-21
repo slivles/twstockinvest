@@ -238,7 +238,13 @@ def getDayTradeData():
     # download today stock data
     url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data"
     today = datetime.date.today()
-    request.urlretrieve(url, "STOCK_DAY_ALL_" + str(today) + ".csv")
+    success_flag = False
+    while(success_flag==False):
+        try:
+            request.urlretrieve(url, "STOCK_DAY_ALL_" + str(today) + ".csv")
+            success_flag = True
+        except:
+            time.sleep(10)
     time.sleep(20)
     url2 = "http://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_download.php?l=zh-tw&se=EW"
     try:
@@ -389,7 +395,13 @@ def download_daily_three_major_leagal_person_data():
     url = "https://www.twse.com.tw/fund/T86?response=csv&date="+today_just_number+"&selectType=ALL"
     print("start download daily legal person data")
     print(url)
-    request.urlretrieve(url, "上市三大法人_" + str(today) + ".csv")
+    success_flag = False
+    while(success_flag == False):
+        try:
+            request.urlretrieve(url, "上市三大法人_" + str(today) + ".csv")
+            success_flag = True
+        except:
+            time.sleep(5)
     time.sleep(30)
     # 上櫃資料(櫃買中心)
     # https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d=111/04/15&s=0,asc
