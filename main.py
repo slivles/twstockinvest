@@ -238,9 +238,20 @@ def getDayTradeData():
     # download today stock data
     url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data"
     today = datetime.date.today()
-    request.urlretrieve(url, "STOCK_DAY_ALL_" + str(today) + ".csv")
+    success_flag = False
+    while(success_flag==False):
+        try:
+            request.urlretrieve(url, "STOCK_DAY_ALL_" + str(today) + ".csv")
+            success_flag = True
+        except:
+            time.sleep(10)
+    time.sleep(20)
     url2 = "http://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_download.php?l=zh-tw&se=EW"
-    request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
+    try:
+        request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
+    except:
+        time.sleep(10)
+        request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
 
 
 # 櫃買資料處理
@@ -254,7 +265,7 @@ def counter_data_preprocess(filename):
     data = data.replace(',', '')
     # close the input file
     fin.close()
-    # open the input file in write mode
+    # open the input file in write mo   de
     fin = open(filename, "wt", encoding="utf-8")
     # overrite the input file with the resulting data
     fin.write(data)
@@ -369,25 +380,39 @@ def everyday_stock_data_update():
 def three_major_leagal_person_intergrate():
     download_daily_three_major_leagal_person_data()
     today = str(datetime.date.today())
-    process_three_major_leagal_person_data("上市三大法人_" + today)
-    process_three_major_leagal_person_data("上櫃三大法人_" + today)
-    remove_warrant_from_csv("上市三大法人_" + today)
+    # today = str(datetime.datetime.strptime("2022-10-24","%Y-%m-%d").date())
+    process_three_major_leagal_person_data("上市三大法人_" + today + ".csv")
+    process_three_major_leagal_person_data("上櫃三大法人_" + today + ".csv")
+    remove_warrant_from_csv("上市三大法人_" + today + ".csv")
 
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
     # 上市資料(證交所)
-    today = datetime.datetime.strptime("2022-02-25","%Y-%m-%d").date()
-    # today = datetime.date.today()
+    # today = datetime.datetime.strptime("2022-10-24","%Y-%m-%d").date()
+    today = datetime.date.today()
     print(str(today))
     today_just_number = str(today).replace("-","")
     url = "https://www.twse.com.tw/fund/T86?response=csv&date="+today_just_number+"&selectType=ALL"
     print("start download daily legal person data")
     print(url)
-    request.urlretrieve(url, "上市三大法人_" + str(today) + ".csv")
+    success_flag = False
+    while(success_flag == False):
+        try:
+            request.urlretrieve(url, "上市三大法人_" + str(today) + ".csv")
+            success_flag = True
+        except:
+            time.sleep(5)
+    time.sleep(30)
     # 上櫃資料(櫃買中心)
+    # https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d=111/04/15&s=0,asc
     url2 = "https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d="
     print(url2)
-    request.urlretrieve(url2, "上櫃三大法人_" + str(today) + ".csv")
+    try:
+        request.urlretrieve(url2, "上櫃三大法人_" + str(today) + ".csv")
+    except:
+        time.sleep(10)
+        request.urlretrieve(url2, "上櫃三大法人_" + str(today) + ".csv")
+    time.sleep(30)
     print("download daily legal person data success")
     return 0
 
@@ -997,12 +1022,13 @@ def user_interface():
     print("4. end")
     c = input("choose : ")
     if (c == "1"):
-        print("1. update every day stock data")
+        print("1. update everyday stock data")
         print("2. update technical data")
         print("3. update predict data")
         print("4. update all")
         print("5. Start a thread to auto update daily data")
         print("6. insert csv data start from certain day")
+        print("7. update everyday legal person data")
         d = input("choose : ")
         if (d == "1"):
             print("start : everyday_stock_data_update")
@@ -1026,6 +1052,9 @@ def user_interface():
             print("start : predict_update")
             predict_update()
             print("end : predict_update")
+            print("start : three_major_leagal_person_intergrate")
+            three_major_leagal_person_intergrate()
+            print("end : three_major_leagal_person_intergrate")
         elif (d == "5"):
             print("start thread : schedule_auto_update_everyday_data")
             t = threading.Thread(target=schedule_auto_update_everyday_data)  #
@@ -1034,7 +1063,10 @@ def user_interface():
             print("start : insert_csv_data_from_date()")
             insert_csv_data_from_date()
             print("end : insert_csv_data_from_date()")
-
+        elif (d == "7"):
+            print("start : three_major_leagal_person_intergrate()")
+            three_major_leagal_person_intergrate()
+            print("end : three_major_leagal_person_intergrate()")
     elif (c == "2"):
         print("start : pick_stock_one_pack")
         pick_stock_one_pack()
@@ -1055,11 +1087,21 @@ def pick_stock_one_pack():
     picked_list, pciked_reason_list = fetch_technical_for_pick()
     man_picked_stock_code_list, man_picked_reason_list = human_pick(picked_list, pciked_reason_list)
     human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list)
+    three_major_leagal_person_intergrate()
 
 
 def file_checksum(filename):
     return hashlib.md5(open(filename, 'rb').read()).hexdigest()
 
+def is_weekend():
+    i = datetime.datetime.today().weekday()
+    print("Today is "+ str(i))
+    if((i == 5) or (i==6)):
+        print("is_weekend return True")
+        return True
+    else:
+        print("is_weekend return False")
+        return False
 
 def schedule_auto_update_everyday_data():
     now = datetime.datetime.now().time()
@@ -1069,9 +1111,19 @@ def schedule_auto_update_everyday_data():
     time.sleep(int(delta.seconds))
     while(True):
         # update task
-        everyday_stock_data_update()
-        historical_to_technical_one_pack()
-        predict_update()
+        if(is_weekend() == False):
+            print("start : everyday_stock_data_update")
+            everyday_stock_data_update()
+            print("end : everyday_stock_data_update")
+            print("start : historical_to_technical_one_pack")
+            historical_to_technical_one_pack()
+            print("end : historical_to_technical_one_pack")
+            print("start : predict_update")
+            predict_update()
+            print("end : predict_update")
+            print("start : three_major_leagal_person_intergrate")
+            three_major_leagal_person_intergrate()
+            print("end : three_major_leagal_person_intergrate")
         # get sleep time
         now = datetime.datetime.now().time()
         then = datetime.datetime.now().time().replace(hour=16, minute=00, second=00)
