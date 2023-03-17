@@ -1111,7 +1111,7 @@ def schedule_auto_update_everyday_data():
     time.sleep(int(delta.seconds))
     while(True):
         # update task
-        if(is_weekend() == False):
+        if(True):
             print("start : everyday_stock_data_update")
             everyday_stock_data_update()
             print("end : everyday_stock_data_update")
