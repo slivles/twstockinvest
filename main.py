@@ -236,6 +236,7 @@ def add_talib_info(df):
 # 下載每日盤後資訊
 def getDayTradeData():
     # download today stock data
+    # 上市
     url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data"
     today = datetime.date.today()
     success_flag = False
@@ -246,6 +247,7 @@ def getDayTradeData():
         except:
             time.sleep(10)
     time.sleep(20)
+    # 上櫃
     url2 = "http://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430_download.php?l=zh-tw&se=EW"
     try:
         request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
@@ -253,6 +255,38 @@ def getDayTradeData():
         time.sleep(10)
         request.urlretrieve(url2, "SQUOTE_EW_" + str(today) + ".csv")
 
+# 下載特定日期盤後資訊
+def getCertainDayTradeData():
+    # download Certain today stock data
+    CertainDate = input("請輸入日期(yyyyMMdd) : ")
+    # 西元年轉民國年
+    ADyear = CertainDate[:4]
+    ROCyear = str(int(ADyear) - 1911)
+    month = CertainDate[4:6]
+    day = CertainDate[6:]
+    FormatedDate = ADyear + "-" + month + "-" + day
+    #
+    url = "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=csv&date=" + CertainDate + "&type=ALL"
+    # today = datetime.date.today()
+    success_flag = False
+    while(success_flag==False):
+        try:
+            request.urlretrieve(url, "STOCK_DAY_ALL_" +FormatedDate + ".csv")
+            success_flag = True
+        except:
+            time.sleep(10)
+    time.sleep(20)
+
+    url2 = "https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php?l=zh-tw&o=csv&d="+ ROCyear +"/"+ month +"/"+day +"&s=0,asc,0"
+    try:
+        request.urlretrieve(url2, "SQUOTE_EW_" + FormatedDate + ".csv")
+    except:
+        time.sleep(10)
+        request.urlretrieve(url2, "SQUOTE_EW_" + FormatedDate + ".csv")
+
+    # process
+    process_counter_data("SQUOTE_EW_" + FormatedDate + ".csv", FormatedDate)
+    process_listed_data("STOCK_DAY_ALL_" + FormatedDate + ".csv", FormatedDate)
 
 # 櫃買資料處理
 def counter_data_preprocess(filename):
@@ -1029,6 +1063,7 @@ def user_interface():
         print("5. Start a thread to auto update daily data")
         print("6. insert csv data start from certain day")
         print("7. update everyday legal person data")
+        print("8. update Certain Day Stock Data")
         d = input("choose : ")
         if (d == "1"):
             print("start : everyday_stock_data_update")
@@ -1067,6 +1102,10 @@ def user_interface():
             print("start : three_major_leagal_person_intergrate()")
             three_major_leagal_person_intergrate()
             print("end : three_major_leagal_person_intergrate()")
+        elif (d == "8"):
+            print("start : getCertainDayTradeData()")
+            getCertainDayTradeData()
+            print("end : getCertainDayTradeData()")
     elif (c == "2"):
         print("start : pick_stock_one_pack")
         pick_stock_one_pack()
@@ -1116,10 +1155,10 @@ def schedule_auto_update_everyday_data():
             everyday_stock_data_update()
             print("end : everyday_stock_data_update")
             print("start : historical_to_technical_one_pack")
-            historical_to_technical_one_pack()
+            #historical_to_technical_one_pack()
             print("end : historical_to_technical_one_pack")
             print("start : predict_update")
-            predict_update()
+            #predict_update()
             print("end : predict_update")
             print("start : three_major_leagal_person_intergrate")
             three_major_leagal_person_intergrate()
