@@ -47,9 +47,9 @@ def three_major_leagal_person_intergrate():
     file_process_function.download_daily_three_major_leagal_person_data()
     today = str(datetime.date.today())
     # today = str(datetime.datetime.strptime("2022-10-24","%Y-%m-%d").date())
-    file_process_function.process_three_major_leagal_person_data("上市三大法人_" + today + ".csv")
-    file_process_function.process_three_major_leagal_person_data("上櫃三大法人_" + today + ".csv")
-    file_process_function.remove_warrant_from_csv("上市三大法人_" + today + ".csv")
+    # file_process_function.process_three_major_leagal_person_data("LegalPerson/上市三大法人_" + today + ".csv")
+    # file_process_function.process_three_major_leagal_person_data("LegalPerson/上櫃三大法人_" + today + ".csv")
+    # file_process_function.remove_warrant_from_csv("LegalPerson/上市三大法人_" + today + ".csv")
 
 def insert_cvs_file_by_date(date):
     conn = database_function.connectDB()
