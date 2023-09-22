@@ -21,6 +21,9 @@ import hashlib
 import os.path
 from os import path
 import schedule
+from apscheduler.schedulers.background import BackgroundScheduler
+
+
 
 # 程式
 import database_function
@@ -143,8 +146,11 @@ def user_interface():
             print("end : three_major_leagal_person_intergrate")
         elif (d == "5"):
             print("start thread : schedule_auto_update_everyday_data")
-            t = threading.Thread(target=schedule_auto_update_everyday_data)  #
-            t.start()  # 開始
+            scheduler = BackgroundScheduler(timezone="Asia/Taipei")
+            scheduler.add_job(data_process_function.everyday_stock_data_update, 'cron', day_of_week='0-4', hour=16, minute=00)
+            scheduler.start()
+            # t = threading.Thread(target=schedule_auto_update_everyday_data)  #
+            # t.start()  # 開始
         elif (d == "6"):
             print("start : insert_csv_data_from_date()")
             data_process_function.insert_csv_data_from_date()

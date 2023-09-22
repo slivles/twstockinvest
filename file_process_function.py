@@ -5,6 +5,7 @@ import pandas as pd
 import datetime
 from urllib import request
 import time
+import csv
 
 # 櫃買資料處理
 def counter_data_preprocess(filename):
@@ -28,10 +29,13 @@ def read_appended_conter_cvs_file(filename, date):
     df = pd.read_csv(filename, encoding="utf-8", sep=' ', header=None)
     df = df.drop([7, 11, 12, 13, 14, 15, 16, 17, 18], 1)
     df = df.rename(
-        columns={0: 'StockCode', 1: 'name', 2: 'close', 3: 'changeAct', 4: 'open', 5: 'high', 6: 'low', 7: 'volume',
-                 8: 'TradeValue', 9: 'transaction'}, inplace=False)
+        columns={0: 'StockCode', 1: 'name', 2: 'close', 3: 'changeAct', 4: 'open', 5: 'high', 6: 'low', 8: 'volume',
+                 9: 'TradeValue', 10: 'transaction'}, inplace=False)
     df["Date"] = str(date).replace("-", "")
-    # print(df.to_string())
+    # 將非數字改為0
+    df['changeAct'] = (pd.to_numeric(df['changeAct'],errors='coerce').fillna(0))
+
+    print(df.to_string())
     return df
 
 def read_conter_cvs_file(filename, date):
@@ -55,6 +59,7 @@ def read_appended_listed_cvs_file(filename, date):
                  9: 'changeAct', 10: 'changeAct'}, inplace=False)
     df = df.fillna(0)
     df["Date"] = str(date).replace("-", "")
+
     print(df.to_string())
     return df
 
@@ -148,6 +153,16 @@ def remove_line_with_certain_start(filename,string):
     with open(filename, 'w', encoding="utf8") as file:
         file.writelines(lines)
 
+def filter_csv_by_first_column_length(filename, length):
+    # 打开CSV文件以读取和写入
+    with open(filename, mode='r', encoding="utf8") as csv_file:
+        reader = csv.reader(csv_file, delimiter=" ")
+        data = [row for row in reader if len(row) > 0 and len(row[0]) <= length]  # 添加对列表长度的检查
+
+    # 打开CSV文件以写入处理后的数据
+    with open(filename, mode='w', encoding="utf8") as csv_file:
+        writer = csv.writer(csv_file, delimiter=" ")
+        writer.writerows(data)
 
 def process_counter_data(filename, date):
     # change encoding from big5 to utf8
@@ -178,6 +193,8 @@ def process_appended_counter_data(filename, date):
     replace_text_in_file(os.path.join("processed", filename), "---", "0")
     #去除檔案最後多餘的資料
     remove_content_after_certain_line(os.path.join("processed", filename),"管理股票")
+    #去除代號長度大於4的資料
+    filter_csv_by_first_column_length(os.path.join("processed", filename), 4)
     # file to dataframe
     df = read_appended_conter_cvs_file(os.path.join("processed", filename), date)
     return df
@@ -194,10 +211,29 @@ def process_appended_listed_data(filename, date):
     remove_line_with_certain_start(os.path.join("processed", filename),"=")
     # 將沒有數字的資料改成數字
     replace_text_in_file(os.path.join("processed", filename), "--", "0")
+    # 去除欄位當中的逗號
+    remove_commas_from_csv(os.path.join("processed", filename))
     # file to dataframe
     df = read_appended_listed_cvs_file(os.path.join("processed", filename), date)
     return df
     # return 0
+
+def remove_commas_from_csv(file_name):
+    # 打开CSV文件以读取和写入
+    with open(file_name, mode='r', encoding="utf8") as csv_file:
+        reader = csv.reader(csv_file)
+        data = [row for row in reader]
+
+    # 去除每个字段中的逗号
+    for row in data:
+        for i in range(len(row)):
+            row[i] = row[i].replace(',', '')  # 使用replace方法去除逗号
+
+    # 打开CSV文件以写入处理后的数据
+    with open(file_name, mode='w', encoding="utf8") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerows(data)
+
 
 def remove_text_from_file(filename, text):
     with open(filename, 'r', encoding="utf8") as file:
@@ -356,8 +392,10 @@ def getCertainDayTradeData():
 
     # process
     process_appended_counter_data("origin/上櫃盤後資訊_BIG5_" + FormatedDate + ".csv", FormatedDate)
+    print("------------------------\n")
+    print("------------------------\n")
+    print("------------------------\n")
     process_appended_listed_data("origin/上市盤後資訊_BIG5_" + FormatedDate + ".csv", FormatedDate)
-    # process_listed_data("origin/上市盤後資訊_BIG5_" + FormatedDate + "_.csv", FormatedDate)
 
 #下載每日三大法人資料
 def download_daily_three_major_leagal_person_data():
