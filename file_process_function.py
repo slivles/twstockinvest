@@ -35,7 +35,7 @@ def read_appended_conter_cvs_file(filename, date):
     # 將非數字改為0
     df['changeAct'] = (pd.to_numeric(df['changeAct'],errors='coerce').fillna(0))
 
-    print(df.to_string())
+    # print(df.to_string())
     return df
 
 def read_conter_cvs_file(filename, date):
@@ -60,7 +60,7 @@ def read_appended_listed_cvs_file(filename, date):
     df = df.fillna(0)
     df["Date"] = str(date).replace("-", "")
 
-    print(df.to_string())
+    # print(df.to_string())
     return df
 
 def read_listed_cvs_file(filename, date):
@@ -169,7 +169,7 @@ def process_counter_data(filename, date):
     change_encoding(filename)
     # remove lines that are unnecessary and have problem to transfer to dataframe
     path, filename = os.path.split(filename)
-    filename.replace("BIG5","UTF-8")
+    filename.replace("BIG5", "UTF-8")
     filename = "reEncode_" + filename
     remove_excess_line(os.path.join("processed", filename))
 

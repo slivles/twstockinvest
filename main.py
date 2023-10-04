@@ -118,6 +118,7 @@ def user_interface():
         print("6. insert csv data start from certain day")
         print("7. update everyday legal person data")
         print("8. update Certain Day Stock Data")
+        print("9. update Database technical table")
         d = input("choose : ")
         if (d == "1"):
             print("start : everyday_stock_data_update")
@@ -147,7 +148,7 @@ def user_interface():
         elif (d == "5"):
             print("start thread : schedule_auto_update_everyday_data")
             scheduler = BackgroundScheduler(timezone="Asia/Taipei")
-            scheduler.add_job(data_process_function.everyday_stock_data_update, 'cron', day_of_week='0-4', hour=16, minute=00)
+            scheduler.add_job(data_process_function.everyday_stock_data_update, 'cron', day_of_week='0-4', hour=16, minute=00, misfire_grace_time=120)
             scheduler.start()
             # t = threading.Thread(target=schedule_auto_update_everyday_data)  #
             # t.start()  # 開始
@@ -163,6 +164,10 @@ def user_interface():
             print("start : getCertainDayTradeData()")
             file_process_function.getCertainDayTradeData()
             print("end : getCertainDayTradeData()")
+        elif (d == "9"):
+            print("start : historical_to_technical_one_pack()")
+            data_process_function.historical_to_technical_one_pack()
+            print("start : historical_to_technical_one_pack()")
     elif (c == "2"):
         print("start : pick_stock_one_pack")
         pick_stock_one_pack()
