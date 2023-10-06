@@ -184,10 +184,12 @@ def user_interface():
 
 def pick_stock_one_pack():
     # pick stock
-    picked_list, pciked_reason_list = fetch_technical_for_pick()
-    man_picked_stock_code_list, man_picked_reason_list = human_pick(picked_list, pciked_reason_list)
+    picked_list, picked_reason_list = fetch_technical_for_pick()
+    file_name = "records/program_pick_records_"+database_function.get_last_trading_date_with_dash_from_db()+".txt"
+    file_process_function.write_pick_records(file_name, picked_list, picked_reason_list)
+
+    man_picked_stock_code_list, man_picked_reason_list = human_pick(picked_list, picked_reason_list)
     human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list)
-    three_major_leagal_person_intergrate()
 
 def is_weekend():
     i = datetime.datetime.today().weekday()

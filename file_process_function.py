@@ -437,3 +437,10 @@ def writeFailedRecord(failList):
 def writeSuccRecord(stockCode):
     with open('finishRecord.txt', 'w', encoding="utf8") as f:
         f.write(stockCode + '\n')
+
+def write_pick_records(file_name, picked_list, reason_list):
+    with open(file_name, "w") as file:
+        # 遍历列表中的每个字符串并写入文件
+        for item1, item2 in zip(picked_list, reason_list):
+            # 将配对的内容写入文件，并在每行末尾添加换行符
+            file.write(f"{item1} {item2}\n")

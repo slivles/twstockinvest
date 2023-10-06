@@ -67,6 +67,12 @@ def get_last_trading_date_from_db():
     df = read_history_db_as_dataframe(sql, conn)
     return(str(df.Date[0]).replace("-", ""))
 
+def get_last_trading_date_with_dash_from_db():
+    conn = connectDB()
+    sql = "SELECT max(Date) as Date FROM `historical_data` ORDER BY `historical_data`.`Date` DESC"
+    df = read_history_db_as_dataframe(sql, conn)
+    return(str(df.Date[0]))
+
 def predict_update():
     # get date order and data from technical_data
     conn = connectDB()

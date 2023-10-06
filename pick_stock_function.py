@@ -5,6 +5,9 @@ import pandas as pd
 import database_function
 
 # 畫出K線圖
+import file_process_function
+
+
 def draw(df,pciked_reason):
     # ts_code = '2330'  # 股票代码
     symbol = df.StockCode.iloc[-1] + "-" + df.name.iloc[-1] + pciked_reason
@@ -283,6 +286,7 @@ def human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list):
     conn = database_function.connectDB()
     n = 0
     length = len(man_picked_stock_code_list)
+    final_predict_list = []
     for i in man_picked_stock_code_list:
         print("( " + str(n + 1) + " / " + str(length) + " )")
         draw(i,man_picked_reason_list[n])
@@ -295,4 +299,7 @@ def human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list):
             today) + ",'" + stock_code + "','" + name + "','" + man_picked_reason_list[
                   n] + "','" + prdct + "',0,0,0,0,0,0,0)"
         conn.execute(sql)
+        final_predict_list.append(prdct)
         n += 1
+    file_name = "records/man_pick_records_"+database_function.get_last_trading_date_with_dash_from_db()+".txt"
+    file_process_function.write_pick_records(file_name, man_picked_stock_code_list, final_predict_list)
