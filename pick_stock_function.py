@@ -289,6 +289,7 @@ def human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list):
     final_predict_list = []
     for i in man_picked_stock_code_list:
         print("( " + str(n + 1) + " / " + str(length) + " )")
+
         draw(i,man_picked_reason_list[n])
         make_decision()
         stock_code = i.StockCode.iloc[-1]
