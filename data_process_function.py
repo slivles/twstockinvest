@@ -146,18 +146,49 @@ def insert_csv_data_from_date():
             print(append_listed_filename)
 
         date = date + datetime.timedelta(days=1)
+
+
+# 從DB日期+1開始讀取並insert資料到資料庫當中，直到今天為止
+def insert_csv_data_from_db_date():
+    start_date = database_function.get_last_trading_date_with_dash_from_db()
+    date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+    date = date + datetime.timedelta(days=1)
+    today = datetime.datetime.today()
+    conn = database_function.connectDB()
+    print("date : " + str(date))
+    print("todat : " + str(today))
+    print(str(date < today))
+    while (date < today):
+        print("讀取" + str(date.date()) + ":")
+        counter_filename = "reEncode_上櫃盤後資訊_" + str(date.date()) + ".csv"
+        append_counter_filename = "reEncode_上櫃盤後資訊_BIG5_" + str(date.date()) + ".csv"
+        listed_filename = "上市盤後資訊_" + str(date.date()) + ".csv"
+        append_listed_filename = "reEncode_上市盤後資訊_BIG5_" + str(date.date()) + ".csv"
         #
-        # if(path.exists("SQUOTE_EW_" + str(date.date()) + ".csv")):
-        #     print("insert("+str(date.date())+")")
-        #     #insert begin
-        #     df = file_process_function.process_counter_data("SQUOTE_EW_" + str(date.date()) + ".csv", date.date())
-        #     database_function.insertToDB(df, conn)
-        #     df2 = file_process_function.process_listed_data("STOCK_DAY_ALL_" + str(date.date()) + ".csv", date.date())
-        #     database_function.insertToDB(df2, conn)
-        #     #insert end
-        #     date = date + datetime.timedelta(days=1)
-        # else:
-        #     date = date +  datetime.timedelta(days=1)
+        if (path.exists(os.path.join("processed", counter_filename))):
+            df = file_process_function.read_conter_cvs_file(os.path.join("processed", counter_filename), date.date())
+            database_function.insertToDB(df, conn)
+            print(counter_filename)
+        #
+        if (path.exists(os.path.join("processed", append_counter_filename))):
+            df = file_process_function.read_appended_conter_cvs_file(os.path.join("processed", append_counter_filename),
+                                                                     date.date())
+            database_function.insertToDB(df, conn)
+            print(append_counter_filename)
+        #
+        if (path.exists(os.path.join("origin", listed_filename))):
+            df = file_process_function.read_listed_cvs_file(os.path.join("origin", listed_filename), date.date())
+            database_function.insertToDB(df, conn)
+            print(listed_filename)
+        #
+        if (path.exists(os.path.join("processed", append_listed_filename))):
+            df = file_process_function.read_appended_listed_cvs_file(os.path.join("processed", append_listed_filename),
+                                                                     date.date())
+            database_function.insertToDB(df, conn)
+            print(append_listed_filename)
+
+        date = date + datetime.timedelta(days=1)
+
 
 def fetchAndInsertForMT(codeList, finished, conn, fetchLength):
     try:

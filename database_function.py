@@ -20,6 +20,10 @@ def insert_to_tech_db(df, conn):
     df.to_sql('technical_data', conn, if_exists='append', index=False)
     lockForSql.release()
 
+def insert_to_backtest_db(df, conn):
+    lockForSql.acquire()
+    df.to_sql('back_test', conn, if_exists='append', index=False)
+    lockForSql.release()
 
 def connectDB():
     engine = create_engine(
