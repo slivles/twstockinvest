@@ -6,6 +6,7 @@ import database_function
 
 # 畫出K線圖
 import file_process_function
+import global_variable
 
 
 def draw(df,pciked_reason):
@@ -337,8 +338,6 @@ def make_pick_or_drop():
 
     root.mainloop()
 
-
-
 def human_pick(picked_list, pciked_reason_list):
     global prdct
     global today
@@ -422,7 +421,23 @@ def make_decision():
 
     root.mainloop()
 
+def buy_or_drop():
+    root = tk.Tk()
+    root.title('make_decision')
+    root.geometry('300x500+1500+200')
 
+    def button_1():
+        global_variable.button_result = "Buy"
+        root.destroy()
+
+    def button_2():
+        global_variable.button_result = "Drop"
+        root.destroy()
+
+    tk.Button(root, text='Buy', command=button_1, bg='red', width='20', height='3').pack()
+    tk.Button(root, text='Drop', command=button_2, bg='orange', width='20', height='3').pack()
+
+    root.mainloop()
 
 def human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list):
     global today
@@ -449,7 +464,7 @@ def human_pick_2nd_round(man_picked_stock_code_list, man_picked_reason_list):
     file_name = "records/man_pick_records_"+database_function.get_last_trading_date_with_dash_from_db()+".txt"
     file_process_function.write_pick_records(file_name, man_picked_stock_code_list, final_predict_list)
 
-def human_pick_back_test(man_picked_stock_code_list, man_picked_reason_list):
+def hand_pick_back_test(man_picked_stock_code_list, man_picked_reason_list):
     global today
     print("2nd round picked_list length : " + str(len(man_picked_stock_code_list)))
     conn = database_function.connectDB()
@@ -473,3 +488,4 @@ def human_pick_back_test(man_picked_stock_code_list, man_picked_reason_list):
         n += 1
     file_name = "records/man_pick_records_"+database_function.get_last_trading_date_with_dash_from_db()+".txt"
     file_process_function.write_pick_records(file_name, man_picked_stock_code_list, final_predict_list)
+
